@@ -1,0 +1,27 @@
+#include <SPI.h>
+#include <RH_ASK.h>
+
+RH_ASK rf_driver(2000, 12);
+const int turbiditysen=A0;
+
+void setup() {
+    Serial.begin(9600);
+    if (!rf_driver.init()) {
+        Serial.println("RF driver init failed");
+    }
+}
+
+void loop() {
+    float voltlevel=analogRead(turbiditysen);
+    voltlevel=voltlevel*(5.0/1023.0);
+    Serial.println(voltlevel);
+    float ntu =-200*(voltlevel)+800;
+    Serial.println(ntu);
+    String valuestr=String(ntu,2);
+
+    const char *msg= valuestr.c_str();
+    rf_driver.send((uint8_t *)msg, strlen(msg)); // Send the message
+    rf_driver.waitPacketSent(); // Wait for the message to be sent
+    Serial.println("Message sent: ");
+    delay(1000);
+}
