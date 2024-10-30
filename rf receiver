@@ -1,0 +1,49 @@
+#include <SPI.h>
+#include <RH_ASK.h>
+#include <LiquidCrystal.h>
+
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+
+
+RH_ASK rf_driver(2000, 13); // Set the transmission speed and the pin number
+
+void setup() {
+    Serial.begin(9600); 
+    lcd.begin(16, 2);
+    lcd.print("Waiting for data");
+    if (!rf_driver.init()) {
+        Serial.println("RF driver init failed");
+    }
+    
+}
+
+void loop() {
+    uint8_t buf[20]; 
+    uint8_t len = sizeof(buf); 
+
+    if (rf_driver.recv(buf, &len)) { // Check if a message is received
+        lcd.clear();
+        buf[len] = '\0'; // Null-terminate the string
+        Serial.println((char*)buf);
+        float turbidity=atof(buf);
+        Serial.print(turbidity);
+        Serial.println("Message received: ");
+        lcd.print("NTU: ");
+        lcd.setCursor(5,0);
+        if (turbidity < 250) {
+          lcd.print(turbidity);
+    lcd.setCursor(0, 1);
+    lcd.print("CLEAR, DRINKABLE");
+  }
+  if ((turbidity > 250) && (turbidity <500 )) {
+    lcd.print(turbidity);
+    lcd.setCursor(0, 1);
+    lcd.print(" its CLOUDY ");
+  }
+  if (turbidity > 500) {
+    lcd.print(turbidity);
+    lcd.setCursor(0, 1);
+    lcd.print(" its DIRTY ");
+  }
+    }
+}
